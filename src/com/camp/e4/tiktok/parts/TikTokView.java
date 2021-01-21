@@ -1,5 +1,7 @@
 package com.camp.e4.tiktok.parts;
 
+import java.time.ZoneId;
+
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -9,25 +11,106 @@ import org.eclipse.e4.ui.services.IServiceConstants;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
+import com.camp.e4.tiktok.go.ClockWidget;
+import com.camp.e4.tiktok.go.GoClock;
+import com.camp.e4.tiktok.kim.KimClock;
+import com.camp.e4.tiktok.yang.YangClock;
+import org.eclipse.swt.events.SelectionListener;
+
 public class TikTokView {
 	private Label myLabelInView;
+	private Combo timeZones;
+	private Combo colors;
 
 	@PostConstruct
-	public void createPartControl(Composite parent) {
+	public void createPartControl(Composite parent) throws Exception {
 		System.out.println("Enter in SampleE4View postConstruct");
 
 		myLabelInView = new Label(parent, SWT.BORDER);
-		myLabelInView.setText("This is a sample E4 view");
+		
+		YangClock yangClock = new YangClock();
+		yangClock.createPartControl(parent);
+		
+		GoClock goClock = new GoClock();
+		goClock.createPartControl(parent);
+		
+		final KimClock kimClock = new KimClock(parent, SWT.NONE, new RGB(144,238,144));
 
+		timeZones = new Combo(parent, SWT.DROP_DOWN);
+		timeZones.setVisibleItemCount(5);
+		for (String zone : ZoneId.getAvailableZoneIds()) {
+			timeZones.add(zone);
+		}
+
+		timeZones.addSelectionListener(new SelectionListener() {
+			public void widgetSelected(SelectionEvent e) {
+				String id = timeZones.getText();
+				kimClock.setZone(ZoneId.of(id));
+				kimClock.redraw();
+			}
+
+			public void widgetDefaultSelected(SelectionEvent e) {
+				kimClock.setZone(ZoneId.systemDefault());
+				kimClock.redraw();
+			}
+		});
+
+		colors = new Combo(parent, SWT.DROP_DOWN);
+		colors.setVisibleItemCount(5);
+		colors.add("Black");
+		colors.add("White");
+		colors.add("Red");
+		colors.add("Green");
+		colors.add("Blue");
+		colors.add("Yellow");
+		colors.add("Lime");
+		colors.add("Cyan");
+		colors.add("Light Green");
+
+		colors.addSelectionListener(new SelectionListener() {
+			public void widgetSelected(SelectionEvent e) {
+				Color temp = findColor(colors.getText());
+				kimClock.setColor(temp);
+				kimClock.redraw();
+			}
+
+			private Color findColor(String text) {
+				if(text.equals("Black")) {
+					return new Color(null,0, 0, 0);
+				}
+				else if(text.equals("White")) {
+					return new Color(null,255, 255, 255);
+				}
+				else if(text.equals("Red")) return new Color(null,255, 0, 0);
+				else if(text.equals("Green")) return new Color(null,0, 128, 0);
+				else if(text.equals("Blue")) return new Color(null,0, 0, 255);
+				else if(text.equals("Yellow")) return new Color(null,255, 255, 0);
+				else if(text.equals("Lime")) return new Color(null,0, 255, 0);
+				else if(text.equals("Cyan")) return new Color(null,0, 255, 255);
+				else if(text.equals("Light Green")) return new Color(null,144,238,144);
+				else return new Color(null,255, 255, 255);
+
+			}
+
+			public void widgetDefaultSelected(SelectionEvent e) {
+				kimClock.setColor(new Color(null,255, 255, 255));;
+				kimClock.redraw();
+			}
+		});
+		
 	}
 
 	@Focus
 	public void setFocus() {
 		myLabelInView.setFocus();
-
+		timeZones.setFocus();
 	}
 
 	/**
